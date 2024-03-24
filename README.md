@@ -23,6 +23,8 @@ pyttsx3 :  2.90
     --resource 资源目录
         --font  字体资源
         --wav 音频目录（免费网站下载）
+    --build 生成exe可执行文件时生成的目录
+    --dist  生成exe可执行文件时生成的目录
     start.py 入口文件
     button.py 按钮类
     game_stats.py 统计类
@@ -35,6 +37,16 @@ pyttsx3 :  2.90
 1.点击运行 start.py 文件
 
 2.点击运行 start.exe 文件
+
+## 操作扩展
+exe可执行文件生成 扩展
+pyinstaller : 6.5.0
+
+生成命令
+```
+pyinstaller --onefile --windowed --add-data="resource/;resource/" start.py
+```
+生成后，需要将dist目录中的start.exe copy到 根目录下
 
 ## 更新日志
 
