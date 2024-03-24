@@ -6,6 +6,8 @@ from game_stats import GameStats
 from scoreboard import Scoreboard
 import random
 import time
+import pyttsx3
+import threading
 class Start:
     def __init__(self) :
         pygame.init()
@@ -28,6 +30,9 @@ class Start:
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
         self.sb.prep_score()
+
+        # 创建一个队列来存储朗读任务  
+        self.speak_thread = None
         
 
     def run_game(self):
@@ -61,6 +66,11 @@ class Start:
             if self.game_start :
                 self.stats.start_time = time.time()
                 self.game_start = False
+                #朗读top按钮
+                if self.speak_thread is None or not self.speak_thread.is_alive() :
+                    #启动进程
+                    self.speak_thread = threading.Thread(target=self._speak_in_thread , args=(self.top_button.text))
+                    self.speak_thread.start()
 
             # 更新并显示倒计时  
             current_time = time.time()  
@@ -104,17 +114,28 @@ class Start:
                         self._create_select_button_text()
                         #重置select_button 按钮
                         self._create_select_button()
+                        #朗读top按钮
+                        if self.speak_thread is None or not self.speak_thread.is_alive() :
+                            #启动进程
+                            self.speak_thread = threading.Thread(target=self._speak_in_thread , args=(self.top_button.text))
+                            self.speak_thread.start()
                         self.stats.score =0
                         self.stats.level =0
                         self.sb.prep_score()
                         self.stats.start_time = time.time()
                         self.sb.prep_countdown(self.stats.countdown_count)
         else:
+            if self.top_button.rect.collidepoint(mouse_pos) and ( self.speak_thread is None or not self.speak_thread.is_alive()):
+                #启动进程
+                self.speak_thread = threading.Thread(target=self._speak_in_thread , args=(self.top_button.text))
+                self.speak_thread.start()
+
             for select_button in self.select_buttons:
                 if select_button.rect.collidepoint(mouse_pos):
                     if select_button.text == self.top_text :
                             
                             select_button.correct_wav.play()
+                            pygame.time.wait(2000)
                             #重置top_button 文字
                             self._create_top_button_text()
                             #重置top_button 按钮
@@ -123,6 +144,11 @@ class Start:
                             self._create_select_button_text()
                             #重置select_button 按钮
                             self._create_select_button()
+                            #朗读top按钮
+                            if self.speak_thread is None or not self.speak_thread.is_alive() :
+                                #启动进程
+                                self.speak_thread = threading.Thread(target=self._speak_in_thread , args=(self.top_button.text))
+                                self.speak_thread.start()
 
                             self.stats.score += self.settings.points
                             self.stats.level +=1
@@ -132,19 +158,19 @@ class Start:
 
                     else:
                         select_button.error_wav.play()
-
-
+                        select_button.button_color = self.settings.error_button_color
 
     def _create_top_button(self):
         """创建 top 按钮"""
         self.top_button = Button(self,self.top_text,(self.settings.screen_width -self.settings.top_width)//2,
-                                  50,
+                                  120,
                                   self.settings.top_width,
                                   self.settings.top_height,
                                   self.settings.top_text_color,
                                   self.settings.top_button_color,
                                   self.settings.top_font_path,
-                                  self.settings.top_font_size
+                                  self.settings.top_font_size,
+                                  '_?'
                                   )
         self.top_button.draw_button()
 
@@ -156,7 +182,7 @@ class Start:
         self.select_buttons = []
         for i in range(len(self.select_texts)):
             select_button = Button(self,self.select_texts[i],(i + 1) * (self.settings.select_width + 110),
-                                  400,
+                                  500,
                                   self.settings.select_width,
                                   self.settings.select_height,
                                   self.settings.select_text_color,
@@ -201,6 +227,15 @@ class Start:
             end_button.draw_button()
             self.end_buttons.append(end_button)
 
+    def _speak_in_thread(self ,text):
+        engine = pyttsx3.init()  
+        engine.say(text)  
+        engine.runAndWait()
+
+    # 在主线程或其他地方将任务放入队列  
+    def _enqueue_speech(self,text):  
+        with self.queue_lock:  
+            self.speech_queue.put(text) 
 
 if __name__ == '__main__':
     ai = Start()

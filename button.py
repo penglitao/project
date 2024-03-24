@@ -1,9 +1,10 @@
 import pygame
 class Button:
     """定义button按钮"""
-    def __init__(self, ai_game ,text,x,y,width,height,color,bg_color,font_path,font_size):
+    def __init__(self, ai_game ,text,x,y,width,height,color,bg_color,font_path,font_size,top_text = None):
         
         self.text = text
+        self.top_text = top_text
         self.screen = ai_game.screen
         self.settings = ai_game.settings
         self.screen_rect = self.screen.get_rect()
@@ -33,7 +34,7 @@ class Button:
 
     def draw_button(self):
         #按键的位置
-        self._prep_msg(self.text)
+        self._prep_msg(self.text if self.top_text == None else self.top_text)
         self.screen.fill(self.button_color if not self.is_change else self.settings.error_button_color ,self.rect)
         self.screen.blit(self.msg_image ,self.msg_image_rect)
         
